@@ -2,7 +2,7 @@
 its a script that does everything awesome at all times
 
 ## Requirements
-fzf and tmux
+fzf, alacritty, walker, tmux
 
 ## Usage
 ```bash
