@@ -167,7 +167,7 @@ hydrate() {
 }
 
 is_terminal_active() {
-  active_window_class=$(hyprctl activewindow | grep class: | awk '{print $2}')
+  active_window_class=$(hyprctl activewindow | grep initialTitle: | awk '{print $2}')
   log "Found $active_window_class as active window"
 
   if [ "${active_window_class,,}" = $TERMINAL ]; then
