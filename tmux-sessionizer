@@ -121,8 +121,8 @@ if [[ -n "$split_type" && -z "$session_idx" ]]; then
 fi
 
 sanity_check() {
-  if ! command -v alacritty &>/dev/null; then
-    echo "alacritty is not installed. Please install it first."
+  if ! command -v $TERMINAL &>/dev/null; then
+    echo "$TERMINAL is not installed. Please install it first."
     exit 1
   fi
 
@@ -135,6 +135,12 @@ sanity_check() {
     echo "fzf is not installed. Please install it first."
     exit 1
   fi
+
+  if ! command -v wtype &>/dev/null; then
+    echo "fzf is not installed. Please install it first."
+    exit 1
+  fi
+
 }
 
 switch_to() {
@@ -160,14 +166,38 @@ hydrate() {
   fi
 }
 
-# tmux list-clients | grep $(lsof -p $(ps -eo pid,ppid,comm | grep $(hyprctl activewindow | grep pid: | awk '{print $2}') | grep tmux | awk '{print $1}') | grep /dev/pts | awk '{print $NF}' | head -n 1) | awk -F: '{print $2}' | awk '{print $1}'
+is_terminal_active() {
+  active_window_class=$(hyprctl activewindow | grep class: | awk '{print $2}')
+  log "Found $active_window_class as active window"
 
-is_alacritty_running() {
-  pgrep -x "alacritty" >/dev/null
+  if [ "${active_window_class,,}" = $TERMINAL ]; then
+    log "Active window class matches $TERMINAL"
+    return 0
+  fi
+  return 1
 }
 
-# is_alacritty_active() {
-# }
+is_tmux_running_in_active_terminal() {
+  active_terminal_tmux_client_pid=$(ps -eo pid,ppid,comm | grep $(ps -eo pid,ppid,comm | grep $(hyprctl activewindow | grep pid: | awk '{print $2}') | grep bash | awk '{print $1}') | grep tmux: | awk '{print $1}')
+  log "active tmux client pid $active_terminal_tmux_client_pid"
+  
+  if [[ -z $active_terminal_tmux_client_pid ]]; then
+    log "active window isn't running tmux"
+    return 1
+  fi
+  log "Active Terminal Window is running Tmux Client"
+  return 0
+}
+
+is_terminal_running() {
+  terminal_pid=$(pgrep -x $TERMINAL | head -n 1)
+  log "$TERMINAL pid: $terminal_pid"
+
+  if [[ -z terminal_pid ]]; then
+    return 1
+  fi
+  return 0
+}
 
 is_tmux_running() {
   tmux_running=$(pgrep tmux)
@@ -334,7 +364,6 @@ if [[ ! -z $session_cmd ]]; then
 elif [[ ! -z $user_selected ]]; then
   selected="$user_selected"
 else
-  # selected=$(find_dirs | sed 's/^.*[/]//' | walker --dmenu --theme dmenu_250 -p "Hydrate.." "${args[@]}")
   selected=$(find_dirs | walker --dmenu -p "Hydrate.." "${args[@]}")
 fi
 
@@ -360,11 +389,22 @@ if ! has_session "$selected_name"; then
   hydrate "$selected_name" "$selected"
 fi
 
-if ! is_alacritty_running; then
-  log "alacritty not found running, starting.."
-  alacritty -e tmux attach-session -t "$selected_name"
-else
-  tmux attach-session -t "$selected_name"
+if is_terminal_running; then
+  log "$TERMINAL running"
+  if is_terminal_active; then 
+    if ! is_tmux_running_in_active_terminal; then
+      log "tmux not running"
+      wtype -- tmux attach-session -t "$selected_name"
+      wtype -k return
+      exit 0
+    else
+      log "tmux is running"
+      switch_to "$selected_name"
+      exit 0
+    fi
+  fi
 fi
 
-switch_to "$selected_name"
+log "$TERMINAL not found running or is not active"
+exit 1
+# exec setsid uwsm app -- "$TERMINAL" -e tmux attach-session -t "$selected_name"
