@@ -137,7 +137,7 @@ sanity_check() {
   fi
 
   if ! command -v wtype &>/dev/null; then
-    echo "fzf is not installed. Please install it first."
+    echo "wtype is not installed. Please install it first."
     exit 1
   fi
 

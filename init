@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# Get the directory of the script
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Define source files
+TMUX_SESSIONIZER="$SCRIPT_DIR/tmux-sessionizer"
+TMUX_SESSIONIZER_CONF="$SCRIPT_DIR/tmux-sessionizer.conf"
+TMUX_CONF="$SCRIPT_DIR/tmux.conf"
+TMUX_SESSIONIZER_HYDRATION="$SCRIPT_DIR/.tmux-sessionizer"
+
+# Define target directories and symlink paths
+BIN_DIR="$HOME/.local/bin"
+CONFIG_DIR="$HOME/.config/tmux-sessionizer"
+TMUX_CONFIG_DIR="$HOME/.config/tmux"
+
+TMUX_SESSIONIZER_LINK="$BIN_DIR/tmux-sessionizer"
+TMUX_SESSIONIZER_CONF_LINK="$CONFIG_DIR/tmux-sessionizer.conf"
+TMUX_CONF_LINK="$TMUX_CONFIG_DIR/tmux.conf"
+TMUX_SESSIONIZER_HYDRATION_LINK="$HOME/.tmux-sessionizer"
+
+# Ensure target directories exist
+mkdir -p "$BIN_DIR"
+mkdir -p "$CONFIG_DIR"
+mkdir -p "$TMUX_CONFIG_DIR"
+
+# Check if source files exist and create symlinks
+if [[ -f "$TMUX_SESSIONIZER" ]]; then
+    ln -sf "$TMUX_SESSIONIZER" "$TMUX_SESSIONIZER_LINK"
+    echo "Created symlink: $TMUX_SESSIONIZER_LINK -> $TMUX_SESSIONIZER"
+else
+    echo "Error: $TMUX_SESSIONIZER not found"
+    exit 1
+fi
+
+if [[ -f "$TMUX_SESSIONIZER_CONF" ]]; then
+    ln -sf "$TMUX_SESSIONIZER_CONF" "$TMUX_SESSIONIZER_CONF_LINK"
+    echo "Created symlink: $TMUX_SESSIONIZER_CONF_LINK -> $TMUX_SESSIONIZER_CONF"
+else
+    echo "Error: $TMUX_SESSIONIZER_CONF not found"
+    exit 1
+fi
+
+if [[ -f "$TMUX_CONF" ]]; then
+    ln -sf "$TMUX_CONF" "$TMUX_CONF_LINK"
+    echo "Created symlink: $TMUX_CONF_LINK -> $TMUX_CONF"
+else
+    echo "Error: $TMUX_CONF not found"
+    exit 1
+fi
+
+if [[ -f "$TMUX_SESSIONIZER_HYDRATION" ]]; then
+    ln -sf "$TMUX_SESSIONIZER_HYDRATION" "$TMUX_SESSIONIZER_HYDRATION_LINK"
+    echo "Created symlink: $TMUX_SESSIONIZER_HYDRATION -> $TMUX_SESSIONIZER_HYDRATION_LINK"
+else
+    echo "Error: $TMUX_SESSIONIZER_HYDRATION not found"
+    exit 1
+fi
